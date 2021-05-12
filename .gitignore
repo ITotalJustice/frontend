@@ -1,0 +1,69 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# my ignores
+build
+.vscode/
+roms/
+unused/
+tests/
+audio_dump.raw
+
+# VS stuff
+msvc/.*
+msvc/packages
+msvc/Debug
+msvc/Release
+msvc/x64
+msvc/tempboy/Release
+msvc/tempboy/Debug
+msvc/tempboy/x64
+*.tlog
+*.log
+
+# wasm
+output.html
+output.wasm
+output.js
+
+build_*/
+old_code/
+*.geany
+run.sh
+
+# imgui stuff
+*imgui.ini
+imgui_demo.cpp
+
+#
+.cache
