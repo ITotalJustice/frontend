@@ -2,13 +2,9 @@
 
 frontend for all my emulator cores (currently only GB)
 
----
-
 ## Cores
 
 <https://github.com/ITotalJustice/TotalGB>
-
----
 
 ## Credits
 
