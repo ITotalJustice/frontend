@@ -30,7 +30,6 @@ struct LoadRomConfig {
     enum LoadRomType type;
 };
 
-
 #ifdef MGB_VIDEO_BACKEND_SDL1
     #include "video/sdl1/sdl1.h"
     #define VIDEO_INTERFACE_INIT video_interface_init_sdl1
@@ -110,13 +109,13 @@ static void core_on_error(struct GB_Core* gb,
     }
 }
 
-static void core_on_vsync(struct GB_Core* gb,
+static void core_on_vblank(struct GB_Core* gb,
     void* user
 ) {
     VOID_TO_SELF(user);
 
     const struct VideoInterfaceGameTexture game_texture = {
-        .pixels = (uint16_t*)gb->ppu.pixles
+        .pixels = (uint16_t*)gb->pixels
     };
 
     video_interface_update_game_texture(
@@ -376,14 +375,16 @@ static bool setup_core(mgb_t* self) {
         self->gameboy, GB_RTC_UPDATE_CONFIG_USE_LOCAL_TIME
     );
 
-    // GB_set_apu_callback(self->gameboy, core_on_vsync, self);
+    // GB_set_apu_callback(self->gameboy, core_on_vblank, self);
     STUB(core_on_apu);
-    GB_set_vblank_callback(self->gameboy, core_on_vsync, self);
+    GB_set_vblank_callback(self->gameboy, core_on_vblank, self);
     GB_set_hblank_callback(self->gameboy, core_on_hblank, self);
     GB_set_dma_callback(self->gameboy, core_on_dma, self);
     GB_set_halt_callback(self->gameboy, core_on_halt, self);
     GB_set_stop_callback(self->gameboy, core_on_stop, self);
     GB_set_error_callback(self->gameboy, core_on_error, self);
+
+    GB_set_pixels(self->gameboy, self->core_pixels, GB_SCREEN_WIDTH);
 
     return true;
 
@@ -589,6 +590,10 @@ static bool loadrom(mgb_t* self, const struct LoadRomConfig* config) {
             romloader = romloader_open(config->path);
             break;
 
+        // case LoadRomType_FILE:
+        //     romloader = icfile_open(config->path, IFileMode_READ);
+        //     break;
+
         case LoadRomType_MEM:
             printf("loading rom from mem not implemented yet!\n");
             exit(-1);
@@ -617,6 +622,11 @@ static bool loadrom(mgb_t* self, const struct LoadRomConfig* config) {
         printf("fail to read size: %zu\n", self->rom_size);
         goto fail;
     }
+
+    // if (!GB_loadrom_compressed(self->gameboy, self->rom_data, self->rom_size)) {
+    //     printf("fail to gb load rom\n");
+    //     goto fail;
+    // }
 
     if (!GB_loadrom(self->gameboy, self->rom_data, self->rom_size)) {
         printf("fail to gb load rom\n");

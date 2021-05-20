@@ -10,11 +10,11 @@ extern "C" {
 
 #include "video/interface.h"
 #include "audio/interface.h"
-// #include "gui/nk/interface.h"
 
-// #include "gui/gui.h"
-
+// #include "../../TotalGB/src/gb.h"
+// #include "../../TotalGB/src/extras/zrom.h"
 #include <TotalGB/gb.h>
+#include <TotalGB/extras/zrom.h>
 
 
 enum MgbState {
@@ -27,9 +27,8 @@ enum MgbState {
 typedef struct mgb {
 	struct VideoInterface* video_interface;
     struct AudioInterface* audio_interface;
-    // struct NkInterface* nk_interface;
 
-    // struct Gui gui;
+    uint16_t core_pixels[GB_SCREEN_WIDTH * GB_SCREEN_HEIGHT];
 
     // todo: make below stuff into a struct
 	struct GB_Core* gameboy;

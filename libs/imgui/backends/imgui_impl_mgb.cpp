@@ -3,8 +3,24 @@
 
 #include "mgb_helper.hpp"
 #include "imgui_impl_mgb.h"
+
+#ifdef IMGUI_GL2
 #include "imgui_impl_opengl2.h"
-#include "video/interface.h"
+#define IM_GL_INIT(x) ImGui_ImplOpenGL2_Init()
+#define IM_GL_NEW_FRAME() ImGui_ImplOpenGL2_NewFrame()
+#define IM_GL_RENDER_DRAW_DATA(x) ImGui_ImplOpenGL2_RenderDrawData(x)
+#define IM_GL_SHUTDOWN() ImGui_ImplOpenGL2_Shutdown()
+#elif IMGUI_GL3
+#include "imgui_impl_opengl3.h"
+#define IM_GL_INIT(x) ImGui_ImplOpenGL3_Init(x)
+#define IM_GL_NEW_FRAME() ImGui_ImplOpenGL3_NewFrame()
+#define IM_GL_RENDER_DRAW_DATA(x) ImGui_ImplOpenGL3_RenderDrawData(x)
+#define IM_GL_SHUTDOWN() ImGui_ImplOpenGL3_Shutdown()
+#else
+    #error "imgui_impl not set!"
+#endif
+
+#include "../src/video/interface.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -195,7 +211,7 @@ bool ImGui_ImplMGB_Init(int w, int h, int display_w, int display_h) {
     // g_font_stash[0] = io.Fonts->AddFontFromFileTTF("res/fonts/Retro Gaming.ttf", 14);
     // g_font_stash[1] = io.Fonts->AddFontFromFileTTF("res/fonts/Retro Gaming.ttf", 18);
     // g_font_stash[2] = io.Fonts->AddFontFromFileTTF("res/fonts/Retro Gaming.ttf", 24);
-    g_font_stash[3] = io.Fonts->AddFontFromFileTTF("res/fonts/Retro Gaming.ttf", 28);
+    // g_font_stash[3] = io.Fonts->AddFontFromFileTTF("res/fonts/Retro Gaming.ttf", 28);
     // g_font_stash[4] = io.Fonts->AddFontFromFileTTF("res/fonts/Retro Gaming.ttf", 34);
     // g_font_stash[5] = io.Fonts->AddFontFromFileTTF("res/fonts/Retro Gaming.ttf", 38);
 
@@ -283,13 +299,13 @@ bool ImGui_ImplMGB_Init(int w, int h, int display_w, int display_h) {
     CONTROLLER_BUTTON_MAP[VideoInterfaceControllerButton_LEFT] = ImGuiNavInput_DpadLeft;
     CONTROLLER_BUTTON_MAP[VideoInterfaceControllerButton_RIGHT] = ImGuiNavInput_DpadRight;
 
-	ImGui_ImplOpenGL2_Init();
+    IM_GL_INIT("#version 100");
 
 	return true;
 }
 
 void ImGui_ImplMGB_Shutdown() {
-	ImGui_ImplOpenGL2_Shutdown();
+    IM_GL_SHUTDOWN();
     ImGui::DestroyContext();
 }
 
@@ -324,12 +340,12 @@ static void ImGui_ImplMGB_NewFrame() {
 }
 
 void ImGui_ImplMGB_RenderBegin() {
-	ImGui_ImplOpenGL2_NewFrame();
+    IM_GL_NEW_FRAME();
     ImGui_ImplMGB_NewFrame();
     ImGui::NewFrame();
 }
 
 void ImGui_ImplMGB_RenderEnd() {
 	ImGui::Render();
-    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+    IM_GL_RENDER_DRAW_DATA(ImGui::GetDrawData());
 }

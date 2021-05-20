@@ -1,4 +1,4 @@
-project('TotalGB', ['c', 'cpp'],
+project('frontend', ['c', 'cpp'],
     version: '0.0.1',
     license : 'MIT',
     default_options: [
@@ -175,12 +175,12 @@ cflags = [
     '-Wno-unused-function',
 
     # these also need to be added to the linker!
-    '-fsanitize=address',
-    '-fsanitize=leak',
-    '-fsanitize=undefined',
-    '-fsanitize=pointer-compare',
-    '-fsanitize=pointer-subtract',
-    '-fstack-protector-all',
+    #'-fsanitize=address',
+    #'-fsanitize=leak',
+    #'-fsanitize=undefined',
+    #'-fsanitize=pointer-compare',
+    #'-fsanitize=pointer-subtract',
+    #'-fstack-protector-all',
 
     # minizip
     '-DNOUNCRYPT',
@@ -221,22 +221,22 @@ cppflags = [
     '-Wno-unused-function',
 
     # these also need to be added to the linker!
-    '-fsanitize=address',
-    '-fsanitize=leak',
-    '-fsanitize=undefined',
-    '-fsanitize=pointer-compare',
-    '-fsanitize=pointer-subtract',
-    '-fstack-protector-all',
+    #'-fsanitize=address',
+    #'-fsanitize=leak',
+    #'-fsanitize=undefined',
+    #'-fsanitize=pointer-compare',
+    #'-fsanitize=pointer-subtract',
+    #'-fstack-protector-all',
 ]
 
 linkflags = [
     '-lm',
-    '-fsanitize=address',
-    '-fsanitize=leak',
-    '-fsanitize=undefined',
-    '-fsanitize=pointer-compare',
-    '-fsanitize=pointer-subtract',
-    '-fstack-protector-all',
+    #'-fsanitize=address',
+    #'-fsanitize=leak',
+    #'-fsanitize=undefined',
+    #'-fsanitize=pointer-compare',
+    #'-fsanitize=pointer-subtract',
+    #'-fstack-protector-all',
 ]
 
 if get_option('video') == 'sdl1'
@@ -334,7 +334,7 @@ endforeach
 
 
 exe = executable(
-    'TotalGB',
+    'frontend',
     [ source ],
     dependencies : [ dependencies ],
     install: true,

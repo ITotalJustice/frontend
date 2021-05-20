@@ -1,7 +1,7 @@
 #include "sdl2_opengl.h"
 #include "base/base.h"
 
-#include <SDL2/SDL_opengl.h>
+#include <SDL_opengl.h>
 #include <stdlib.h>
 
 
@@ -55,7 +55,7 @@ static void render_game(
     VOID_TO_SELF(_private);
     // SOURCE: https://discourse.libsdl.org/t/why-cant-we-do-blit-on-an-opengl-surface/10975/4
 
-    // Use precise pixel coordinates
+    Use precise pixel coordinates
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.f, 0.f, 0.f);
@@ -210,6 +210,11 @@ struct VideoInterface* video_interface_init_sdl2_opengl(
     CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2));
     CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0));
     CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY));
+    // CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0));
+    // CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES));
+    // CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2));
+    // CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0));
+    
     CHECK(SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5));
     CHECK(SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5));
     CHECK(SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5));

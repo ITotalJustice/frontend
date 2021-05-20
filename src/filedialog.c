@@ -92,4 +92,28 @@ struct FileDialogResult filedialog_save_file(
 
 #else
 
+// these are stubbed...
+struct FileDialogResult filedialog_open_file(
+	const char* filters
+) {
+	struct FileDialogResult r;
+	r.type = FileDialogResultType_ERROR;
+	return r;
+}
+
+struct FileDialogResult filedialog_open_folder(
+) {
+	struct FileDialogResult r;
+	r.type = FileDialogResultType_ERROR;
+	return r;
+}
+
+struct FileDialogResult filedialog_save_file(
+	const char* filters
+) {
+	struct FileDialogResult r;
+	r.type = FileDialogResultType_ERROR;
+	return r;
+}
+
 #endif
