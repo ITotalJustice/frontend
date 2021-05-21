@@ -6,6 +6,7 @@ extern "C" {
 
 
 struct mgb;
+union VideoInterfaceEvent;
 
 
 enum GuiMenu {
@@ -41,13 +42,13 @@ struct Gui {
 	union GuiMenuData data;
 };
 
-void gui_run(
-	struct mgb* self
-);
 
-void gui_render(
-	struct mgb* self
-);
+bool gui_init(struct mgb* mgb);
+void gui_exit(struct mgb* mgb);
+
+void gui_run(struct mgb* self);
+void gui_event(struct mgb* mgb, const union VideoInterfaceEvent* e);
+void gui_render(struct mgb* self);
 
 #ifdef __cplusplus
 }

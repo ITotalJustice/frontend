@@ -1,7 +1,6 @@
 #include "mgb.h"
 #include "util.h"
 #include "filedialog.h"
-#include "imgui/backends/imgui_impl_mgb.h"
 #include "gui/gui.h"
 
 #include "romloader.h"
@@ -350,7 +349,7 @@ static void on_event(void* user,
             break;
 
         case MgbState_GUI:
-            ImGui_ImplMGB_Event(e);
+            gui_event(self, e);
             break;
     }
 }
@@ -454,9 +453,7 @@ static void run_render(mgb_t* self) {
 			break;
 
 		case MgbState_GUI:
-            ImGui_ImplMGB_RenderBegin();
             gui_render(self);
-            ImGui_ImplMGB_RenderEnd();
 			break;
 	}
 
@@ -882,7 +879,7 @@ bool mgb_init(mgb_t* self) {
         goto fail;
     }
 
-    if (!ImGui_ImplMGB_Init(160*2, 144*2, 160*2, 144*2)) {
+    if (!gui_init(self)) {
         goto fail;
     }
 
@@ -907,7 +904,7 @@ void mgb_exit(mgb_t* self) {
         self->gameboy = NULL;
     }
 
-    ImGui_ImplMGB_Shutdown();
+    gui_exit(self);
 
     if (self->video_interface) {
         video_interface_quit(self->video_interface);

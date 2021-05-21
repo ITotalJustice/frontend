@@ -55,7 +55,7 @@ static void render_game(
     VOID_TO_SELF(_private);
     // SOURCE: https://discourse.libsdl.org/t/why-cant-we-do-blit-on-an-opengl-surface/10975/4
 
-    Use precise pixel coordinates
+    // Use precise pixel coordinates
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.f, 0.f, 0.f);

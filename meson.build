@@ -1,23 +1,19 @@
 project('frontend', ['c', 'cpp'],
     version: '0.0.1',
+    meson_version : '>= 0.55.0',
     license : 'MIT',
     default_options: [
-        # core options
-        'buildtype=debug',
-        'warning_level=3',
-        'optimization=0',
-        'strip=true',
-        'werror=true',
-
-        # base options
         'b_ndebug=if-release',
-
         'c_std=c99',
     ],
 )
 
 dependencies = [
-    dependency('TotalGB')
+    dependency('TotalGB'),
+    dependency('imgui', version : '>=1.82'),
+    dependency('zlib'),
+    dependency('minizip', version : '1.2'),
+    #dependency('nativefiledialog'),
 ]
 
 dependencies_str = []
@@ -41,39 +37,8 @@ source = files([
 
     # gui
     'src/gui/gui.cpp',
+    'src/gui/imgui_wrapper.cpp',
     'src/gui/menu/main.cpp',
-
-    # MINIZIP
-    'libs/minizip/unzip.c',
-    'libs/minizip/zip.c',
-    'libs/minizip/ioapi.c',
-    'libs/minizip/ioapi_mem.c',
-
-    # ZLIB
-    'libs/zlib/adler32.c',
-    'libs/zlib/compress.c',
-    'libs/zlib/crc32.c',
-    'libs/zlib/deflate.c',
-    'libs/zlib/gzclose.c',
-    'libs/zlib/gzlib.c',
-    'libs/zlib/gzread.c',
-    'libs/zlib/gzwrite.c',
-    'libs/zlib/infback.c',
-    'libs/zlib/inffast.c',
-    'libs/zlib/inflate.c',
-    'libs/zlib/inftrees.c',
-    'libs/zlib/trees.c',
-    'libs/zlib/uncompr.c',
-    'libs/zlib/zutil.c',
-
-    # imgui
-    'libs/imgui/imgui.cpp',
-    #'libs/imgui/imgui_demo.cpp',
-    'libs/imgui/imgui_draw.cpp',
-    'libs/imgui/imgui_tables.cpp',
-    'libs/imgui/imgui_widgets.cpp',
-    'libs/imgui/backends/imgui_impl_opengl2.cpp',
-    'libs/imgui/backends/imgui_impl_mgb.cpp',
 ])
 
 
@@ -87,6 +52,11 @@ sdl1_opengl_video_backend_source = [
     'src/video/sdl1/sdl1_opengl.c',
 ]
 
+sdl2_video_backend_source = [
+    'src/video/sdl2/base/base.c',
+    'src/video/sdl2/sdl1.c',
+]
+
 sdl2_opengl_video_backend_source = [
     'src/video/sdl2/base/base.c',
     'src/video/sdl2/sdl2_opengl.c',
@@ -95,12 +65,6 @@ sdl2_opengl_video_backend_source = [
 sdl2_vulkan_video_backend_source = [
     'src/video/sdl2/base/base.c',
     'src/video/sdl2/sdl2_vulkan.c',
-]
-
-Allegro5_video_backend_source = [
-    'src/video/allegro5/base/base.c',
-    'src/video/allegro5/allegro5.c',
-    'src/video/allegro5/allegro5_opengl.c',
 ]
 
 sdl1_video_backend_dependencies = [
@@ -126,19 +90,8 @@ sdl2_vulkan_video_backend_dependencies = [
     'vulkan',
 ]
 
-allegro4_video_backend_dependencies = [
-    'allegro-4',
-    'gl',
-]
-
-allegro5_video_backend_dependencies = [
-    'allegro-5',
-    'gl',
-]
-
 includes = include_directories([
     'src',
-    'libs',
 ])
 
 cflags = [
@@ -181,10 +134,6 @@ cflags = [
     #'-fsanitize=pointer-compare',
     #'-fsanitize=pointer-subtract',
     #'-fstack-protector-all',
-
-    # minizip
-    '-DNOUNCRYPT',
-    '-DNOCRYPT',
 ]
 
 cppflags = [
@@ -258,21 +207,8 @@ elif get_option('video') == 'sdl2_opengl'
     source += sdl2_opengl_video_backend_source
     dependencies_str +=  sdl2_opengl_video_backend_dependencies
     cflags += '-DMGB_VIDEO_BACKEND_SDL2_OPENGL'
+    cppflags += '-DIMGUI_GL2'
 
-elif get_option('video') == 'allegro4'
-    source += allegro4_video_backend_source
-    dependencies_str +=  allegro4_video_backend_dependencies
-    cflags += '-DMGB_VIDEO_BACKEND_ALLEGRO4'
-
-elif get_option('video') == 'allegro5'
-    source += allegro5_video_backend_source
-    dependencies_str +=  allegro5_video_backend_dependencies
-    cflags += '-DMGB_VIDEO_BACKEND_ALLEGRO5'
-
-elif get_option('video') == 'glfw'
-    source += glfw_video_backend_source
-    dependencies_str +=  glfw_video_backend_dependencies
-    cflags += '-DMGB_VIDEO_BACKEND_GLFW'
 endif
 
 
@@ -298,9 +234,6 @@ endif
 # detect the OS
 if host_machine.system() == 'android'
 elif host_machine.system() == 'windows' or host_machine.system() == 'cygwin'
-    # nativefiledialog
-    cflags += '-DHAS_NFD=1'
-    source += 'libs/nativefiledialog/nfd_win.c'
 elif host_machine.system() == 'darwin'
 elif host_machine.system() == 'dragonfly'
 elif host_machine.system() == 'emscripten'
@@ -308,19 +241,6 @@ elif host_machine.system() == 'freebsd'
 elif host_machine.system() == 'gnu'
 elif host_machine.system() == 'haiku'
 elif host_machine.system() == 'linux'
-    # nativefiledialog
-    cflags += '-DHAS_NFD=1'
-
-    # check if we have gtk, if not, use zenity
-    if dependency('gtk+-3.0', required : false).found()
-        source += 'libs/nativefiledialog/nfd_gtk.c'
-        dependencies_str += 'gtk+-3.0'
-    elif dependency('gtk+-2.0', required : false).found()
-        source += 'libs/nativefiledialog/nfd_gtk.c'
-        dependencies_str += 'gtk+-2.0'
-    else
-        source += 'libs/nativefiledialog/nfd_zenity.c'
-    endif
 elif host_machine.system() == 'netbsd'
 elif host_machine.system() == 'openbsd'
 elif host_machine.system() == 'sunos'

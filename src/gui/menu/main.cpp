@@ -1,5 +1,5 @@
 #include "menu.hpp"
-#include "imgui/backends/mgb_helper.hpp"
+#include "../imgui_wrapper.hpp"
 #include "../../mgb.h"
 
 #include <stdio.h>

@@ -96,6 +96,8 @@ struct FileDialogResult filedialog_save_file(
 struct FileDialogResult filedialog_open_file(
 	const char* filters
 ) {
+	(void)filters;
+
 	struct FileDialogResult r;
 	r.type = FileDialogResultType_ERROR;
 	return r;
@@ -111,6 +113,8 @@ struct FileDialogResult filedialog_open_folder(
 struct FileDialogResult filedialog_save_file(
 	const char* filters
 ) {
+	(void)filters;
+
 	struct FileDialogResult r;
 	r.type = FileDialogResultType_ERROR;
 	return r;

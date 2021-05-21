@@ -36,7 +36,6 @@ build
 .vscode/
 roms/
 unused/
-tests/
 audio_dump.raw
 
 # VS stuff
@@ -64,6 +63,16 @@ run.sh
 # imgui stuff
 *imgui.ini
 imgui_demo.cpp
+
+# meson subprojects
+subprojects/packagecache/
+subprojects/imgui*/
+subprojects/minizip*/
+subprojects/zlib*/
+subprojects/TotalGB
+subprojects/SDL2*/
+subprojects/nativefiledialog*
+subprojects/packagefiles/nativefiledialog*
 
 #
 .cache

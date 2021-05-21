@@ -1,8 +1,8 @@
 #include "zip.h"
 
-#include <minizip/zip.h>
-#include <minizip/unzip.h>
-#include <minizip/ioapi_mem.h>
+#include <zip.h>
+#include <unzip.h>
+#include <ioapi_mem.h>
 
 
 typedef struct {
