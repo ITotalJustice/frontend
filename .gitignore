@@ -70,3 +70,8 @@ android/app/jni/SDL
 
 #
 .cache
+
+# minizip-ng seems to create files on build
+# not sure if these will actuall be ignored...
+libs/minizip-ng/unzip.h
+libs/minizip-ng/zip.h
