@@ -62,17 +62,11 @@ run.sh
 
 # imgui stuff
 *imgui.ini
-imgui_demo.cpp
 
-# meson subprojects
-subprojects/packagecache/
-subprojects/imgui*/
-subprojects/minizip*/
-subprojects/zlib*/
-subprojects/TotalGB
-subprojects/SDL2*/
-subprojects/nativefiledialog*
-subprojects/packagefiles/nativefiledialog*
+android/.gradle
+android/app/.externalNativeBuild
+android/app/build
+android/app/jni/SDL
 
 #
 .cache

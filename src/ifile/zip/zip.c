@@ -1,8 +1,15 @@
 #include "zip.h"
 
-#include <zip.h>
-#include <unzip.h>
-#include <ioapi_mem.h>
+
+// #if !defined(MGB_ZIP)
+// IFile_t* izip_open(const char* path, enum IFileMode mode) {
+//     (void)path; (void)mode;
+//     return NULL;
+// }
+// #endif
+
+// todo: switch to new api
+#include <mz_compat.h>
 
 
 typedef struct {
@@ -10,7 +17,6 @@ typedef struct {
         unzFile u;
         zipFile z;
     } file;
-    ourmemory_t ourmem;
     enum IFileMode mode;
 } ctx_t;
 
@@ -41,11 +47,6 @@ static void internal_close(void* _private) {
 
             case IFileMode_APPEND:
                 break; // not supported (yet)
-        }
-
-        if (ctx->ourmem.base) {
-            free(ctx->ourmem.base);
-            ctx->ourmem.base = NULL;
         }
 
         free(ctx);
@@ -142,7 +143,6 @@ static IFile_t* open_read(const char* path) {
 
     const ctx_t _ctx = {
         .file.u = file,
-        .ourmem = {0}, // unused!
         .mode = IFileMode_READ
     };
 
@@ -203,7 +203,6 @@ static IFile_t* open_write(const char* path) {
 
     const ctx_t _ctx = {
         .file.z = file,
-        .ourmem = {0}, // unused!
         .mode = IFileMode_WRITE
     };
 
@@ -304,10 +303,10 @@ bool izip_open_file(IFile_t* ifile, const char *name) {
             return false;
 
         case IFileMode_WRITE:
-            return Z_OK == zipOpenNewFileInZip(
+            return UNZ_OK == zipOpenNewFileInZip(
                 ctx->file.z, name,
                 NULL, NULL, 0, NULL, 0, NULL,
-                Z_DEFLATED, Z_DEFAULT_COMPRESSION
+                Z_DEFLATED, DEF_MEM_LEVEL
             );
 
         case IFileMode_APPEND:
@@ -347,7 +346,7 @@ bool izip_find_file_callback(IFile_t* ifile, user_cmp_t cmp) {
         .cmp = cmp
     };
 
-    if (Z_OK != unzLocateFile(
+    if (UNZ_OK != unzLocateFile(
         ctx->file.u, (const char*)&hacky, comp
     )) {
         return false;

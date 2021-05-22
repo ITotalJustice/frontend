@@ -1,3 +1,8 @@
+// todo: the open func should take an enum
+// of ifile_type which will call that type's function
+// that way, only 1 header needs to be included, and
+// only 1 function call is used across the codebase!
+
 #pragma once
 
 #ifdef __cplusplus
@@ -9,12 +14,17 @@ extern "C" {
 #include <stddef.h>
 
 
+enum IFileType {
+    IFileType_FILE,
+    IFileType_MEM,
+    IFileType_ZIP,
+};
+
 enum IFileMode {
     IFileMode_READ,
     IFileMode_WRITE,
     IFileMode_APPEND,
 };
-
 
 typedef struct IFile {
     void* _private;
@@ -28,6 +38,7 @@ typedef struct IFile {
 } IFile_t;
 
 
+IFile_t* ifile_open(const char* file, enum IFileType type, enum IFileMode mode);
 void ifile_close(IFile_t* ifile);
 bool ifile_read(IFile_t* ifile, void* data, size_t len);
 bool ifile_write(IFile_t* ifile, const void* data, size_t len);

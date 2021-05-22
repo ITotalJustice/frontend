@@ -2,6 +2,25 @@
 
 #include <stdlib.h>
 
+// #include "cfile/cfile.h"
+// #include "mem/mem.h"
+// #include "zip/zip.h"
+
+
+// IFile_t* ifile_open(const char* file, enum IFileType type, enum IFileMode mode) {
+//     switch (type) {
+//         case IFileType_FILE:
+//             return NULL;
+
+//         case IFileType_MEM:
+//             return NULL; // unsupported
+
+//         case IFileType_ZIP:
+//             return NULL;
+//     }
+
+//     return NULL;
+// }
 
 void ifile_close(IFile_t* ifile) {
     if (ifile) {

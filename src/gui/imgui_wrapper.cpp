@@ -5,13 +5,13 @@
 
 
 #ifdef IMGUI_GL2
-    #include "imgui_impl_opengl2.h"
+    #include "backends/imgui_impl_opengl2.h"
     #define IM_GL_INIT(x) ImGui_ImplOpenGL2_Init()
     #define IM_GL_NEW_FRAME() ImGui_ImplOpenGL2_NewFrame()
     #define IM_GL_RENDER_DRAW_DATA(x) ImGui_ImplOpenGL2_RenderDrawData(x)
     #define IM_GL_SHUTDOWN() ImGui_ImplOpenGL2_Shutdown()
 #elif IMGUI_GL3
-    #include "imgui_impl_opengl3.h"
+    #include "backends/imgui_impl_opengl3.h"
     #define IM_GL_INIT(x) ImGui_ImplOpenGL3_Init(x)
     #define IM_GL_NEW_FRAME() ImGui_ImplOpenGL3_NewFrame()
     #define IM_GL_RENDER_DRAW_DATA(x) ImGui_ImplOpenGL3_RenderDrawData(x)
@@ -25,6 +25,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <assert.h>
+
+#ifdef ANDROID
+    #include <SDL_rwops.h>
+#endif
 
 
 namespace im {
@@ -199,13 +203,23 @@ bool ImGui_ImplMGB_Init(int w, int h, int display_w, int display_h) {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
-    io.BackendPlatformName = "imgui_impl_mgb";
+    io.BackendPlatformName = "mgb";
 
     io.SetClipboardTextFn = NULL;
     io.GetClipboardTextFn = NULL;
     io.ClipboardUserData = NULL;
 
-    g_font_stash[0] = io.Fonts->AddFontFromFileTTF("data/assets/fonts/Retro Gaming.ttf", 28);
+    #ifdef ANDROID
+        size_t size = 0;
+        void* data = SDL_LoadFile("assets/fonts/Retro Gaming.ttf", &size);
+        
+        // imgui takes ownership of mem, so this is okay
+        if (data && size) {
+            g_font_stash[0] = io.Fonts->AddFontFromMemoryTTF(data, size, 28);
+        }
+    #else
+        g_font_stash[0] = io.Fonts->AddFontFromFileTTF("assets/fonts/Retro Gaming.ttf", 28);    
+    #endif
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();

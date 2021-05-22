@@ -23,6 +23,8 @@ static void internal_close(void* _private) {
         ctx->data = NULL;
         ctx->free = NULL;
     }
+
+    free(ctx);
 }
 
 static bool internal_read(void* _private, void* data, size_t len) {

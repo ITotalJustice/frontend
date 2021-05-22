@@ -4,6 +4,11 @@
 
 #include "mgb.h"
 
+// hacky way to get SDL_main to work
+#ifdef ANDROID
+    #include <SDL.h>
+#endif
+
 
 int main(int argc, char** argv) {
     static struct mgb mgb;

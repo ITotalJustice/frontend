@@ -13,8 +13,7 @@ extern "C" {
 
 // #include "../../TotalGB/src/gb.h"
 // #include "../../TotalGB/src/extras/zrom.h"
-#include <TotalGB/gb.h>
-#include <TotalGB/extras/zrom.h>
+#include <gb.h>
 
 
 enum MgbState {

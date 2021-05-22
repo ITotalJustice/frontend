@@ -1,9 +1,0 @@
-[wrap-git]
-directory = TotalGB
-url = https://github.com/ITotalJustice/TotalGB.git
-push-url = git@github.com:ITotalJustice/TotalGB.git
-revision = HEAD
-patch_directory = TotalGB
-
-[provide]
-TotalGB = TotalGB_dep

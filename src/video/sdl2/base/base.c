@@ -552,6 +552,9 @@ bool base_sdl2_init_window(
 	    );
 	}
 
+    // try load mappings
+    SDL_GameControllerAddMappingsFromFile("mappings/gamecontrollerdb.txt");
+    
     // save the user callbacks
     self->user = config->user;
     self->on_event = config->on_event;

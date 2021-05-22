@@ -6,7 +6,6 @@
 #include "romloader.h"
 #include "ifile/cfile/cfile.h"
 #include "ifile/zip/zip.h"
-#include "ifile/gzip/gzip.h"
 
 #include <stdio.h>
 #include <stdlib.h>

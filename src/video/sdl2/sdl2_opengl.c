@@ -55,7 +55,8 @@ static void render_game(
     VOID_TO_SELF(_private);
     // SOURCE: https://discourse.libsdl.org/t/why-cant-we-do-blit-on-an-opengl-surface/10975/4
 
-    // Use precise pixel coordinates
+    #ifndef ANDROID
+    Use precise pixel coordinates
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.f, 0.f, 0.f);
@@ -79,6 +80,7 @@ static void render_game(
     glEnd();
 
     glPopMatrix();
+    #endif
 }
 
 static void render_end(
@@ -207,13 +209,16 @@ struct VideoInterface* video_interface_init_sdl2_opengl(
 
     #define CHECK(r) if (r) { SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError()); }
 
-    CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2));
-    CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0));
-    CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY));
-    // CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0));
-    // CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES));
-    // CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2));
-    // CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0));
+    #ifdef ANDROID
+        CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0));
+        CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES));
+        CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2));
+        CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0));
+    #else
+        CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2));
+        CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0));
+        CHECK(SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY));
+    #endif
     
     CHECK(SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5));
     CHECK(SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5));

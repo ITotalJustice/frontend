@@ -3,7 +3,6 @@
 
 #include "ifile/cfile/cfile.h"
 #include "ifile/zip/zip.h"
-#include "ifile/gzip/gzip.h"
 #include "ifile/mem/mem.h"
 
 
@@ -38,10 +37,6 @@ fail:
     return NULL;
 }
 
-// static IFile_t* load_from_gzip(const char* path) {
-    // return igzip_open(path, "rb");
-// }
-
 IFile_t* romloader_open(const char* path) {
     const enum ExtensionType type = util_get_extension_type(
         path, ExtensionOffsetType_LAST
@@ -54,10 +49,6 @@ IFile_t* romloader_open(const char* path) {
     if (type == ExtensionType_ZIP) {
         return load_from_zip(path);
     }
-
-    // if (type == ExtensionType_GZIP) {
-        // return load_from_gzip(path);
-    // }
 
     return NULL;
 }
