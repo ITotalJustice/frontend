@@ -1,8 +1,4 @@
-// TODO: this file should not be part of libs/imgui
-// instead part of the gui!!!
-
 #include "imgui_wrapper.hpp"
-
 
 #ifdef IMGUI_GL2
     #include "backends/imgui_impl_opengl2.h"

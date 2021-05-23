@@ -38,6 +38,7 @@ if(ANDROID)
     add_definitions(
         -DMGB_VIDEO_BACKEND_SDL2_OPENGL
         -DIMGUI_GL3
+        -DMGB_SDL
     )
 
 else()
@@ -49,6 +50,7 @@ else()
     add_definitions(
         -DMGB_VIDEO_BACKEND_SDL2_OPENGL
         -DIMGUI_GL2
+        -DMGB_SDL
     )
 endif()
 

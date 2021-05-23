@@ -149,7 +149,7 @@ struct VideoInterface* video_interface_init_sdl2_opengl(
     const struct VideoInterfaceInfo* info,
     void* user, void (*on_event)(void*, const union VideoInterfaceEvent*)
 ) {
-	struct VideoInterface* iface = NULL;
+    struct VideoInterface* iface = NULL;
     ctx_t* self = NULL;
 
     iface = malloc(sizeof(struct VideoInterface));
@@ -234,19 +234,19 @@ struct VideoInterface* video_interface_init_sdl2_opengl(
 
     self->gl_ctx = SDL_GL_CreateContext(self->base.window);
 
-	if (!self->gl_ctx) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError());
-		goto fail;
-	}
+    if (!self->gl_ctx) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError());
+        goto fail;
+    }
 
-	if (SDL_GL_MakeCurrent(self->base.window, self->gl_ctx)) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError());
-		goto fail;
-	}
+    if (SDL_GL_MakeCurrent(self->base.window, self->gl_ctx)) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError());
+        goto fail;
+    }
 
     if (SDL_GL_SetSwapInterval(1)) {
-    	SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError());
-		goto fail;
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError());
+        goto fail;
     }
 
     glGenTextures(1, &self->texture);
@@ -256,14 +256,14 @@ struct VideoInterface* video_interface_init_sdl2_opengl(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(
-    	GL_TEXTURE_2D, // type
-    	0, // idk
-    	GL_RGB5_A1, // internal format
-    	160, 144, // width, height
-    	0, // idk
-    	GL_RGBA, // idk
-    	GL_UNSIGNED_SHORT_1_5_5_5_REV, // packing (555, 1 alpha)
-    	NULL
+        GL_TEXTURE_2D, // type
+        0, // idk
+        GL_RGB5_A1, // internal format
+        160, 144, // width, height
+        0, // idk
+        GL_RGBA, // idk
+        GL_UNSIGNED_SHORT_1_5_5_5_REV, // packing (555, 1 alpha)
+        NULL
     );
 
     return iface;
