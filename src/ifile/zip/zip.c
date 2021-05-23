@@ -1,12 +1,34 @@
 #include "zip.h"
 
 
-// #if !defined(MGB_ZIP)
-// IFile_t* izip_open(const char* path, enum IFileMode mode) {
-//     (void)path; (void)mode;
-//     return NULL;
-// }
-// #endif
+#ifndef MGB_ZIP
+
+IFile_t* izip_open(const char* path, enum IFileMode mode) {
+    (void)path; (void)mode;
+    return NULL;
+}
+
+// TODO: these functions shouldnt exist!
+size_t izip_get_file_count(IFile_t* ifile) {
+    (void)ifile;
+    return 0;
+}
+
+void izip_close_file(IFile_t* ifile) {
+    (void)ifile;
+}
+
+bool izip_open_file(IFile_t* ifile, const char *name) {
+    (void)ifile; (void)name;
+    return false;
+}
+
+bool izip_find_file_callback(IFile_t* ifile, bool(*cmp)(const char*)) {
+    (void)ifile; (void)cmp;
+    return false;
+}
+
+#else
 
 // todo: switch to new api
 #include <mz_compat.h>
@@ -316,11 +338,9 @@ bool izip_open_file(IFile_t* ifile, const char *name) {
     return false;
 }
 
-typedef bool(*user_cmp_t)(const char* name);
-
 struct Hacky {
     char _hack; // this will be 0 (NULL)
-    user_cmp_t cmp;
+    bool (*cmp)(const char*);
 };
 
 static int comp(unzFile ufile, const char* f1, const char* f2) {
@@ -332,7 +352,7 @@ static int comp(unzFile ufile, const char* f1, const char* f2) {
     return !hacky->cmp(f1);
 }
 
-bool izip_find_file_callback(IFile_t* ifile, user_cmp_t cmp) {
+bool izip_find_file_callback(IFile_t* ifile, bool(*cmp)(const char*)) {
     IFILE_TO_CTX;
 
     if (ctx->mode != IFileMode_READ) {
@@ -354,3 +374,5 @@ bool izip_find_file_callback(IFile_t* ifile, user_cmp_t cmp) {
 
     return UNZ_OK == unzOpenCurrentFile(ctx->file.u);
 }
+
+#endif // MGB_ZIP

@@ -1,4 +1,4 @@
-#include "imgui_wrapper.hpp"
+#include "imgui.h"
 
 #ifdef IMGUI_GL2
     #include "backends/imgui_impl_opengl2.h"
@@ -16,7 +16,7 @@
     #error "imgui_impl not set!"
 #endif
 
-#include "../video/interface.h"
+#include "../../video/interface.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -147,31 +147,31 @@ static void on_shown(const struct VideoInterfaceEventDataShown* e) {
 
 bool ImGui_ImplMGB_Event(const union VideoInterfaceEvent* e) {
     switch (e->type) {
-    case VideoInterfaceEventType_FILE_DROP:
-      break;
+        case VideoInterfaceEventType_FILE_DROP:
+          break;
 
-      case VideoInterfaceEventType_MBUTTON:
-        on_mbutton(&e->mbutton);
-        return true;
+        case VideoInterfaceEventType_MBUTTON:
+            on_mbutton(&e->mbutton);
+            return true;
 
-      case VideoInterfaceEventType_MMOTION:
-        on_mmotion(&e->mmotion);
-        return true;
+        case VideoInterfaceEventType_MMOTION:
+            on_mmotion(&e->mmotion);
+            return true;
 
-      case VideoInterfaceEventType_KEY:
-        on_key(&e->key);
-        return true;
+        case VideoInterfaceEventType_KEY:
+            on_key(&e->key);
+            return true;
 
-      case VideoInterfaceEventType_CBUTTON:
-        on_cbutton(&e->cbutton);
-        return true;
+        case VideoInterfaceEventType_CBUTTON:
+            on_cbutton(&e->cbutton);
+            return true;
 
-      case VideoInterfaceEventType_CAXIS:
-        break;
+        case VideoInterfaceEventType_CAXIS:
+            break;
 
-      case VideoInterfaceEventType_RESIZE:
-        on_resize(&e->resize);
-        break;
+        case VideoInterfaceEventType_RESIZE:
+            on_resize(&e->resize);
+            break;
 
         case VideoInterfaceEventType_HIDDEN:
             on_hidden(&e->hidden);
@@ -247,10 +247,10 @@ bool ImGui_ImplMGB_Init(int w, int h, int display_w, int display_h) {
     colors[ImGuiCol_TabHovered]             = col_selected;
     colors[ImGuiCol_TabActive]              = col_selected;
 
-  g_w = w;
-  g_h = h;
-  g_display_w = display_w;
-  g_display_h = display_h;
+    g_w = w;
+    g_h = h;
+    g_display_w = display_w;
+    g_display_h = display_h;
 
     MOUSE_BUTTON_MAP[VideoInterfaceMouseButton_LEFT]    = 0;
     MOUSE_BUTTON_MAP[VideoInterfaceMouseButton_MIDDLE]  = 1;
@@ -331,11 +331,6 @@ static void ImGui_ImplMGB_NewFrame() {
         io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
     }
 
-    // Setup time step (we don't use SDL_GetTicks() because it is using millisecond resolution)
-    // static Uint64 frequency = SDL_GetPerformanceFrequency();
-    // Uint64 current_time = SDL_GetPerformanceCounter();
-    // io.DeltaTime = g_Time > 0 ? (float)((double)(current_time - g_Time) / frequency) : (float)(1.0f / 60.0f);
-    // g_Time = current_time;
     io.DeltaTime = 0.016666f;
 
     ImGui_ImplMGB_UpdateMousePosAndButtons();
@@ -353,3 +348,26 @@ void ImGui_ImplMGB_RenderEnd() {
 }
 
 } // namespace im
+
+
+#include "dearimgui.h"
+#include "../../mgb.h"
+#include "menu/menu.hpp"
+
+bool dearimgui_init(int w, int h) {
+    return im::ImGui_ImplMGB_Init(w, h, w, h);
+}
+
+void dearimgui_exit() {
+    im::ImGui_ImplMGB_Shutdown();
+}
+
+void dearimgui_event(const union VideoInterfaceEvent* e) {
+    im::ImGui_ImplMGB_Event(e);
+}
+
+void dearimgui_render(struct mgb* mgb) {
+    im::ImGui_ImplMGB_RenderBegin();
+    menu::Main(mgb);
+    im::ImGui_ImplMGB_RenderEnd();
+}
