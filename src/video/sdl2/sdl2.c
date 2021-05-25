@@ -2,45 +2,103 @@
 #include "base/base.h"
 
 
-typedef struct Ctx {
+typedef struct Ctx
+{
     struct Base base;
 
     SDL_Renderer* renderer;
     SDL_Texture* texture;
 } ctx_t;
 
-#define CTX_FROM_PRIVATE ctx_t* self = (ctx_t*)_private;
+#define VOID_TO_SELF(_private) ctx_t* self = (ctx_t*)_private;
 
 
-static void quit(
-    void* _private
-);
+static void internal_quit(void* _private)
+{
+    VOID_TO_SELF(_private);
 
-static void render(
-    void* _private
-);
+    if (SDL_WasInit(SDL_INIT_VIDEO))
+    {
+        if (self->texture)
+        {
+            SDL_DestroyTexture(self->texture);
+        }
 
-static void update_game_texture(
+        if (self->renderer)
+        {
+            SDL_DestroyRenderer(self->renderer);
+        }
+
+        base_sdl2_exit(&self->base);
+    }
+
+    SDL_free(self);
+}
+
+static void internal_render_begin(void* _private)
+{
+    VOID_TO_SELF(_private);
+
+    SDL_RenderClear(self->renderer);
+    
+}
+
+static void internal_render_game(void* _private)
+{
+    VOID_TO_SELF(_private);
+
+    SDL_RenderCopy(self->renderer, self->texture, NULL, NULL);
+}
+
+static void internal_render_end(void* _private)
+{
+    VOID_TO_SELF(_private);
+
+    SDL_RenderPresent(self->renderer);
+}
+
+static void internal_update_game_texture(
     void* _private,
     const struct VideoInterfaceGameTexture* game_texture
-);
+) {
+    VOID_TO_SELF(_private);
 
-static void poll_events(
-    void* _private
-);
+    void* pixels; int pitch;
 
-static void toggle_fullscreen(
-    void* _private
-);
+    SDL_LockTexture(self->texture, NULL, &pixels, &pitch);
+    memcpy(pixels, game_texture->pixels, 160*144*2);
+    SDL_UnlockTexture(self->texture);
+}
 
-static void set_window_name(
-    void* _private,
-    const char* name
-);
+static void internal_poll_events(void* _private)
+{
+    VOID_TO_SELF(_private);
+
+    base_sdl2_poll_events(&self->base);
+}
+
+static void internal_toggle_fullscreen(void* _private)
+{
+    VOID_TO_SELF(_private);
+
+    base_sdl2_toggle_fullscreen(&self->base);
+}
+
+static void internal_set_window_name(void* _private,const char* name)
+{
+    VOID_TO_SELF(_private);
+
+    base_sdl2_set_window_name(&self->base, name);
+}
+
+static void on_resize(void* _private, int w, int h)
+{
+    (void)_private; (void)w; (void)h;
+}
 
 struct VideoInterface* video_interface_init_sdl2(
     const struct VideoInterfaceInfo* info,
-    const struct VideoInterfaceUserCallbacks* callbacks
+    void* user, void (*on_event)(void*, const union VideoInterfaceEvent*)
 ) {
     struct VideoInterface* iface = NULL;
     ctx_t* self = NULL;
@@ -48,31 +106,44 @@ struct VideoInterface* video_interface_init_sdl2(
     iface = malloc(sizeof(struct VideoInterface));
     self = SDL_malloc(sizeof(struct Ctx));
 
-    if (!iface) {
+    if (!iface)
+    {
         goto fail;
     }
 
-    if (!self) {
+    if (!self)
+    {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n\n", SDL_GetError());
         goto fail;
     }
 
-    const struct VideoInterface internal_interface = {
-        ._private = self,
-        .quit = quit,
-        .render = render,
-        .update_game_texture = update_game_texture,
-        .poll_events = poll_events,
-        .toggle_fullscreen = toggle_fullscreen,
-        .set_window_name = set_window_name,
+    const struct VideoInterface internal_interface =
+    {
+        ._private               = self,
+        .quit                   = internal_quit,
+        .render_begin           = internal_render_begin,
+        .render_game            = internal_render_game,
+        .render_end             = internal_render_end,
+        .update_game_texture    = internal_update_game_texture,
+        .poll_events            = internal_poll_events,
+        .toggle_fullscreen      = internal_toggle_fullscreen,
+        .set_window_name        = internal_set_window_name,
     };
 
     // set the internal data!
     *iface = internal_interface;
 
-    const struct BaseConfig base_config = {
+    const struct BaseConfig base_config =
+    {
+        .callbacks =
+        {
+            .user = self,
+            .on_resize = on_resize
+        },
+        .user = user,
+        .on_event = on_event,
         .window_name = info->window_name,
-        .window_flags = 0,
+        .window_flags = SDL_WINDOW_RESIZABLE,
         .x = SDL_WINDOWPOS_CENTERED,
         .y = SDL_WINDOWPOS_CENTERED,
         .w = info->w,
@@ -88,23 +159,29 @@ struct VideoInterface* video_interface_init_sdl2(
         .set_max_win = false
     };
 
-    if (!base_sdl2_init(&self->base, &base_config, callbacks)) {
+    if (!base_sdl2_init_system(&self->base))
+    {
         goto fail;
     }
 
-    const int render_flags = SDL_RENDERER_ACCELERATED |SDL_RENDERER_PRESENTVSYNC;
+    if (!base_sdl2_init_window(&self->base, &base_config))
+    {
+        goto fail;
+    }
 
-    self->renderer = SDL_CreateRenderer(
-        self->base.window, -1, render_flags
-    );
+    const int render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
 
-    if (!self->renderer) {
+    self->renderer = SDL_CreateRenderer(self->base.window, -1, render_flags);
+
+    if (!self->renderer)
+    {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError());
         goto fail;
     }
 
     // try and enable blending
-    if (SDL_SetRenderDrawBlendMode(self->renderer, SDL_BLENDMODE_BLEND)) {
+    if (SDL_SetRenderDrawBlendMode(self->renderer, SDL_BLENDMODE_BLEND))
+    {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError());
     }
 
@@ -115,7 +192,8 @@ struct VideoInterface* video_interface_init_sdl2(
         // game_info.w, game_info.h
     );
 
-    if (!self->texture) {
+    if (!self->texture)
+    {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s\n", SDL_GetError());
         goto fail;
     }
@@ -123,87 +201,16 @@ struct VideoInterface* video_interface_init_sdl2(
     return iface;
 
 fail:
-    if (iface) {
+    if (iface)
+    {
         free(iface);
         iface = NULL;
     }
 
-    if (self) {
-        quit(self);
+    if (self)
+    {
+        internal_quit(self);
     }
 
     return NULL;
-}
-
-static void quit(
-    void* _private
-) {
-    CTX_FROM_PRIVATE;
-
-    if (SDL_WasInit(SDL_INIT_VIDEO)) {
-        if (self->texture) {
-            SDL_DestroyTexture(self->texture);
-        }
-
-        if (self->renderer) {
-            SDL_DestroyRenderer(self->renderer);
-        }
-
-        base_sdl2_exit(&self->base);
-    }
-
-    SDL_free(self);
-}
-
-static void render(
-    void* _private
-) {
-    CTX_FROM_PRIVATE;
-
-    SDL_RenderClear(self->renderer);
-
-    SDL_RenderCopy(
-        self->renderer, self->texture,
-        NULL, NULL
-    );
-
-    SDL_RenderPresent(self->renderer);
-}
-
-static void update_game_texture(
-    void* _private,
-    const struct VideoInterfaceGameTexture* game_texture
-) {
-    CTX_FROM_PRIVATE;
-
-    void* pixels; int pitch;
-
-    SDL_LockTexture(self->texture, NULL, &pixels, &pitch);
-    memcpy(pixels, game_texture->pixels, 160*144*2);
-    SDL_UnlockTexture(self->texture);
-}
-
-static void poll_events(
-    void* _private
-) {
-    CTX_FROM_PRIVATE;
-
-    base_sdl2_poll_events(&self->base);
-}
-
-static void toggle_fullscreen(
-    void* _private
-) {
-    CTX_FROM_PRIVATE;
-
-    base_sdl2_toggle_fullscreen(&self->base);
-}
-
-static void set_window_name(
-    void* _private,
-    const char* name
-) {
-    CTX_FROM_PRIVATE;
-
-    base_sdl2_set_window_name(&self->base, name);
 }

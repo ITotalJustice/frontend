@@ -289,6 +289,11 @@ struct VideoInterface {
 };
 
 
+struct VideoInterface* video_interface_init(
+    const struct VideoInterfaceInfo* info,
+    void* user, void (*on_event)(void*, const union VideoInterfaceEvent*)
+);
+
 void video_interface_quit(
     struct VideoInterface* self
 );

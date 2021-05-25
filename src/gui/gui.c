@@ -13,7 +13,31 @@
 
 // for now though, its a mess...
 
-#ifdef MGB_GUI
+/*
+#ifdef MGB_IMGUI
+    #include "dearimgui/dearimgui.h"
+    #define GUI_INIT dearimgui_init
+    #define GUI_EXIT dearimgui_exit
+    #define GUI_EVENT dearimgui_event
+    #define GUI_RENDER dearimgui_render
+#elif MGB_CACA
+    #include "nogui/nogui.h"
+    #define GUI_INIT nogui_init
+    #define GUI_EXIT nogui_exit
+    #define GUI_EVENT nogui_event
+    #define GUI_RENDER nogui_render
+#elif MGB_NOGUI
+    #include "nogui/nogui.h"
+    #define GUI_INIT nogui_init
+    #define GUI_EXIT nogui_exit
+    #define GUI_EVENT nogui_event
+    #define GUI_RENDER nogui_render
+#else
+    #error "No valid gui set!"
+#endif
+*/
+
+#ifdef MGB_IMGUI
     #include "dearimgui/dearimgui.h"
     #define GUI_INIT dearimgui_init
     #define GUI_EXIT dearimgui_exit

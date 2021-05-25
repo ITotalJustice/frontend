@@ -6,6 +6,8 @@
 #include "romloader.h"
 #include "ifile/cfile/cfile.h"
 #include "ifile/zip/zip.h"
+#include "video/interface.h"
+#include "audio/interface.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,32 +29,6 @@ struct LoadRomConfig {
     const size_t size;
     enum LoadRomType type;
 };
-
-#ifdef MGB_VIDEO_BACKEND_SDL1
-    #include "video/sdl1/sdl1.h"
-    #define VIDEO_INTERFACE_INIT video_interface_init_sdl1
-#elif MGB_VIDEO_BACKEND_SDL1_OPENGL
-    #include "video/sdl1/sdl1_opengl.h"
-    #define VIDEO_INTERFACE_INIT video_interface_init_sdl1_opengl
-#elif MGB_VIDEO_BACKEND_SDL2
-    #include "video/sdl2/sdl2.h"
-    #define VIDEO_INTERFACE_INIT video_interface_init_sdl2
-#elif MGB_VIDEO_BACKEND_SDL2_OPENGL
-    #include "video/sdl2/sdl2_opengl.h"
-    #define VIDEO_INTERFACE_INIT video_interface_init_sdl2_opengl
-#elif MGB_VIDEO_BACKEND_SDL2_VULKAN
-    #include "video/sdl2/sdl2_vulkan.h"
-    #define VIDEO_INTERFACE_INIT video_interface_init_sdl2_vulkan
-#elif MGB_VIDEO_BACKEND_ALLEGRO4
-    #include "video/allegro4/allegro4.h"
-    #define VIDEO_INTERFACE_INIT video_interface_init_allegro4
-#elif MGB_VIDEO_BACKEND_ALLEGRO5
-    #include "video/allegro5/allegro5.h"
-    #define VIDEO_INTERFACE_INIT video_interface_init_allegro5
-#else
-    #error "NO VIDEO BACKEND SELECTED FOR MGB!"
-#endif
-
 
 static bool setup_video_interface(mgb_t* self);
 static bool setup_audio_interface(mgb_t* self);
@@ -79,9 +55,11 @@ static void core_on_error(struct GB_Core* gb,
 ) {
     UNUSED(gb); UNUSED(user);
 
-    switch (e->type) {
+    switch (e->type)
+    {
         case GB_ERROR_TYPE_UNKNOWN_INSTRUCTION:
-            if (e->data.unk_instruction.cb_prefix) {
+            if (e->data.unk_instruction.cb_prefix)
+            {
                 printf("[ERROR] UNK Opcode 0xCB%02X\n", e->data.unk_instruction.opcode);
             }
             else {
@@ -107,46 +85,42 @@ static void core_on_error(struct GB_Core* gb,
     }
 }
 
-static void core_on_vblank(struct GB_Core* gb,
-    void* user
-) {
+static void core_on_vblank(struct GB_Core* gb, void* user)
+{
     VOID_TO_SELF(user);
 
-    const struct VideoInterfaceGameTexture game_texture = {
+    const struct VideoInterfaceGameTexture game_texture =
+    {
         .pixels = (uint16_t*)gb->pixels
     };
 
-    video_interface_update_game_texture(
-        self->video_interface, &game_texture
-    );
+    video_interface_update_game_texture(self->video_interface, &game_texture);
 }
 
-static void core_on_hblank(struct GB_Core* gb,
-    void* user
-) {
+static void core_on_hblank(struct GB_Core* gb, void* user)
+{
     STUB(gb); STUB(user);
 }
 
-static void core_on_dma(struct GB_Core* gb,
-    void* user
-) {
+static void core_on_dma(struct GB_Core* gb, void* user)
+{
     UNUSED(gb); UNUSED(user);
 }
 
-static void core_on_halt(struct GB_Core* gb,
-    void* user
-) {
+static void core_on_halt(struct GB_Core* gb, void* user)
+{
     UNUSED(gb); UNUSED(user);
 }
 
-static void core_on_stop(struct GB_Core* gb,
-    void* user
-) {
+static void core_on_stop(struct GB_Core* gb, void* user)
+{
     UNUSED(gb); UNUSED(user);
 }
 
-static void core_run(mgb_t* self) {
-    if (self->rom_loaded) {
+static void core_run(mgb_t* self)
+{
+    if (self->rom_loaded)
+    {
         GB_run_frame(self->gameboy);
     }
 }
@@ -154,27 +128,28 @@ static void core_run(mgb_t* self) {
 
 // [VIDEO INTERFACE CALLBACKS]
 static void on_file_drop(mgb_t* self,
-     const struct VideoInterfaceEventDataFileDrop* e
+    const struct VideoInterfaceEventDataFileDrop* e
 ) {
     STUB(self); STUB(e);
 }
 
 static void on_mbutton(mgb_t* self,
-     const struct VideoInterfaceEventDataMouseButton* e
+    const struct VideoInterfaceEventDataMouseButton* e
 ) {
     STUB(self); STUB(e);
 }
 
 static void on_mmotion(mgb_t* self,
-     const struct VideoInterfaceEventDataMouseMotion* e
+    const struct VideoInterfaceEventDataMouseMotion* e
 ) {
     STUB(self); STUB(e);
 }
 
 static void on_key(mgb_t* self,
-     const struct VideoInterfaceEventDataKey* e
+    const struct VideoInterfaceEventDataKey* e
 ) {
-    static const uint8_t map[VideoInterfaceKey_MAX] = {
+    static const uint8_t map[VideoInterfaceKey_MAX] =
+    {
         [VideoInterfaceKey_Z]       = GB_BUTTON_B,
         [VideoInterfaceKey_X]       = GB_BUTTON_A,
         [VideoInterfaceKey_ENTER]   = GB_BUTTON_START,
@@ -186,9 +161,12 @@ static void on_key(mgb_t* self,
     };
 
     // handle any hotkeys after a key press (when its released)
-    if (!e->down && e->mod & VideoInterfaceKeyMod_CTRL) {
-        if (e->mod & VideoInterfaceKeyMod_SHIFT) {
-            switch (e->key) {
+    if (!e->down && e->mod & VideoInterfaceKeyMod_CTRL)
+    {
+        if (e->mod & VideoInterfaceKeyMod_SHIFT)
+        {
+            switch (e->key)
+            {
                 case VideoInterfaceKey_S:
                     mgb_savestate_filedialog(self);
                     break;
@@ -200,8 +178,10 @@ static void on_key(mgb_t* self,
                 default: break;
             }
         }
-        else {
-            switch (e->key) {
+        else
+        {
+            switch (e->key)
+            {
                 case VideoInterfaceKey_O:
                     mgb_load_rom_filedialog(self);
                     break;
@@ -222,7 +202,8 @@ static void on_key(mgb_t* self,
         return;
     } 
 
-    if (map[e->key]) {
+    if (map[e->key])
+    {
         GB_set_buttons(self->gameboy, map[e->key], e->down);
     }
 }
@@ -230,7 +211,8 @@ static void on_key(mgb_t* self,
 static void on_cbutton(mgb_t* self,
      const struct VideoInterfaceEventDataControllerButton* e
 ) {
-    static const uint8_t map[VideoInterfaceControllerButton_MAX] = {
+    static const uint8_t map[VideoInterfaceControllerButton_MAX] =
+    {
         [VideoInterfaceControllerButton_B]        = GB_BUTTON_B,
         [VideoInterfaceControllerButton_A]        = GB_BUTTON_A,
         [VideoInterfaceControllerButton_START]    = GB_BUTTON_START,
@@ -241,25 +223,26 @@ static void on_cbutton(mgb_t* self,
         [VideoInterfaceControllerButton_RIGHT]    = GB_BUTTON_RIGHT,
     };
 
-    if (map[e->button]) {
+    if (map[e->button])
+    {
         GB_set_buttons(self->gameboy, map[e->button], e->down);
     }
 }
 
 static void on_caxis(mgb_t* self,
-     const struct VideoInterfaceEventDataControllerAxis* e
+    const struct VideoInterfaceEventDataControllerAxis* e
 ) {
     STUB(self); STUB(e);
 }
 
 static void on_resize(mgb_t* self,
-     const struct VideoInterfaceEventDataResize* e
+    const struct VideoInterfaceEventDataResize* e
 ) {
     STUB(self); STUB(e);
 }
 
 static void on_hidden(mgb_t* self,
-     const struct VideoInterfaceEventDataHidden* e
+    const struct VideoInterfaceEventDataHidden* e
 ) {
     STUB(self); UNUSED(e);
 }
@@ -273,7 +256,8 @@ static void on_shown(mgb_t* self,
 static void on_quit(mgb_t* self,
     const struct VideoInterfaceEventDataQuit* e
 ) {
-	switch (e->reason) {
+	switch (e->reason)
+    {
 		case VideoInterfaceQuitReason_ERROR:
 			printf("[MUI] exit requested due to error!\n");
 			break;
@@ -289,7 +273,8 @@ static void on_quit(mgb_t* self,
 static void process_event(mgb_t* self,
     const union VideoInterfaceEvent* e
 ) {
-    switch (e->type) {
+    switch (e->type)
+    {
         case VideoInterfaceEventType_FILE_DROP:
             on_file_drop(self, &e->file_drop);
             break;
@@ -337,12 +322,14 @@ static void on_event(void* user,
 ) {
     VOID_TO_SELF(user);
 
-    if (e->type == VideoInterfaceEventType_QUIT) {
+    if (e->type == VideoInterfaceEventType_QUIT)
+    {
         process_event(self, e);
         return;
     }
 
-    switch (self->state) {
+    switch (self->state)
+    {
         case MgbState_CORE:
             process_event(self, e);
             break;
@@ -353,19 +340,23 @@ static void on_event(void* user,
     }
 }
 
-static bool setup_core(mgb_t* self) {
-    if (self->gameboy) {
+static bool setup_core(mgb_t* self)
+{
+    if (self->gameboy)
+    {
         free(self->gameboy);
         self->gameboy = NULL;
     }
 
     self->gameboy = (struct GB_Core*)malloc(sizeof(struct GB_Core));
 
-    if (!self->gameboy) {
+    if (!self->gameboy)
+    {
         goto fail;
     }
 
-    if (!GB_init(self->gameboy)) {
+    if (!GB_init(self->gameboy))
+    {
         goto fail;
     }
 
@@ -387,7 +378,8 @@ static bool setup_core(mgb_t* self) {
     return true;
 
 fail:
-    if (self->gameboy) {
+    if (self->gameboy)
+    {
         free(self->gameboy);
         self->gameboy = NULL;
     }
@@ -395,13 +387,16 @@ fail:
     return false;
 }
 
-static bool setup_video_interface(mgb_t* self) {
-    if (self->video_interface) {
+static bool setup_video_interface(mgb_t* self)
+{
+    if (self->video_interface)
+    {
         video_interface_quit(self->video_interface);
         self->video_interface = NULL;
     }
 
-    const struct VideoInterfaceInfo info = {
+    const struct VideoInterfaceInfo info =
+    {
         .window_name = "Hello, World!",
         .x = 0,
         .y = 0,
@@ -409,15 +404,17 @@ static bool setup_video_interface(mgb_t* self) {
         .h = 144 * 2,
     };
 
-    self->video_interface = VIDEO_INTERFACE_INIT(
+    self->video_interface = video_interface_init(
         &info, self, on_event
     );
 
     return self->video_interface != NULL;
 }
 
-static bool setup_audio_interface(mgb_t* self) {
-    if (self->audio_interface) {
+static bool setup_audio_interface(mgb_t* self)
+{
+    if (self->audio_interface)
+    {
         // audio_interface_quit(self->audio_interface);
         self->audio_interface = NULL;
     }
@@ -427,12 +424,15 @@ static bool setup_audio_interface(mgb_t* self) {
     // return self->audio_interface != NULL;
 }
 
-static void run_events(mgb_t* self) {
+static void run_events(mgb_t* self)
+{
     video_interface_poll_events(self->video_interface);
 }
 
-static void run_state(mgb_t* self) {
-	switch (self->state) {
+static void run_state(mgb_t* self)
+{
+	switch (self->state)
+    {
 		case MgbState_CORE:
 			core_run(self);
 			break;
@@ -443,10 +443,12 @@ static void run_state(mgb_t* self) {
 	}
 }
 
-static void run_render(mgb_t* self) {
+static void run_render(mgb_t* self)
+{
     video_interface_render_begin(self->video_interface);
     
-    switch (self->state) {
+    switch (self->state)
+    {
 		case MgbState_CORE:
 			video_interface_render_game(self->video_interface);
 			break;
@@ -459,8 +461,10 @@ static void run_render(mgb_t* self) {
     video_interface_render_end(self->video_interface);
 }
 
-static void free_game(mgb_t* self) {
-    if (!self->rom_loaded) {
+static void free_game(mgb_t* self)
+{
+    if (!self->rom_loaded)
+    {
         assert(self->rom_data == NULL);
         return;
     }
@@ -475,15 +479,18 @@ static void free_game(mgb_t* self) {
     self->rom_loaded = false;
 }
 
-static void savegame(mgb_t* self) {
-    if (!self->rom_loaded) {
+static void savegame(mgb_t* self)
+{
+    if (!self->rom_loaded)
+    {
         return;
     }
 
     const bool game_has_save = GB_has_save(self->gameboy);
     const bool game_has_rtc = GB_has_rtc(self->gameboy);
 
-    if (game_has_save || game_has_rtc) {
+    if (game_has_save || game_has_rtc)
+    {
         // get the paths
         const struct SafeString save_path = util_create_save_path(
             self->rom_path.str
@@ -496,24 +503,30 @@ static void savegame(mgb_t* self) {
         struct GB_SaveData save_data = {0};
         GB_savegame(self->gameboy, &save_data);
 
-        if (game_has_save && save_path.valid) {
+        if (game_has_save && save_path.valid)
+        {
             const size_t save_size = GB_calculate_savedata_size(self->gameboy);
 
             IFile_t* file = icfile_open(save_path.str, IFileMode_WRITE);
             
-            if (file) {
-                if (ifile_write(file, save_data.data, save_size)) {
+            if (file)
+            {
+                if (ifile_write(file, save_data.data, save_size))
+                {
                 }
             }
 
             ifile_close(file);
         }
 
-        if (game_has_rtc && rtc_path.valid) {
+        if (game_has_rtc && rtc_path.valid)
+        {
             IFile_t* file = icfile_open(rtc_path.str, IFileMode_WRITE);
             
-            if (file) {
-                if (ifile_write(file, &save_data.rtc, sizeof(save_data.rtc))) {
+            if (file)
+            {
+                if (ifile_write(file, &save_data.rtc, sizeof(save_data.rtc)))
+                {
                 }
             }
 
@@ -522,11 +535,13 @@ static void savegame(mgb_t* self) {
     }
 }
 
-static void loadsave(mgb_t* self) {
+static void loadsave(mgb_t* self)
+{
     const bool game_has_save = GB_has_save(self->gameboy);
     const bool game_has_rtc = GB_has_rtc(self->gameboy);
 
-    if (game_has_save || game_has_rtc) {
+    if (game_has_save || game_has_rtc)
+    {
         // get the paths
         const struct SafeString save_path = util_create_save_path(
             self->rom_path.str
@@ -544,8 +559,10 @@ static void loadsave(mgb_t* self) {
             IFile_t* file = icfile_open(save_path.str, IFileMode_READ);
             
             if (file) {
-                if (ifile_size(file) == save_size) {
-                    if (ifile_read(file, save_data.data, save_size)) {
+                if (ifile_size(file) == save_size)
+                {
+                    if (ifile_read(file, save_data.data, save_size))
+                    {
                         save_data.size = save_size;
                     }
                 }
@@ -554,14 +571,18 @@ static void loadsave(mgb_t* self) {
             ifile_close(file);
         }
 
-        if (game_has_rtc && rtc_path.valid) {
+        if (game_has_rtc && rtc_path.valid)
+        {
             const size_t save_size = sizeof(save_data.rtc);
 
             IFile_t* file = icfile_open(rtc_path.str, IFileMode_READ);
             
-            if (file) {
-                if (ifile_size(file) == save_size) {
-                    if (ifile_read(file, &save_data.rtc, save_size)) {
+            if (file)
+            {
+                if (ifile_size(file) == save_size)
+                {
+                    if (ifile_read(file, &save_data.rtc, save_size))
+                    {
                         save_data.has_rtc = true;
                     }
                 }
@@ -574,14 +595,17 @@ static void loadsave(mgb_t* self) {
     }
 }
 
-static bool loadrom(mgb_t* self, const struct LoadRomConfig* config) {
+static bool loadrom(mgb_t* self, const struct LoadRomConfig* config)
+{
     IFile_t* romloader = NULL;
 
-    if (self->rom_loaded) {
+    if (self->rom_loaded)
+    {
         free_game(self);
     }
 
-    switch (config->type) {
+    switch (config->type)
+    {
         case LoadRomType_FILE:
             romloader = romloader_open(config->path);
             break;
@@ -596,35 +620,41 @@ static bool loadrom(mgb_t* self, const struct LoadRomConfig* config) {
             break;
     }
 
-    if (!romloader) {
+    if (!romloader)
+    {
         goto fail;
     }
 
     self->rom_size = ifile_size(romloader);
 
-    if (!self->rom_size || self->rom_size > 0x400000) {
+    if (!self->rom_size || self->rom_size > 0x400000)
+    {
         printf("size is too big\n");
         goto fail;
     }
 
     self->rom_data = malloc(self->rom_size);
 
-    if (!self->rom_data) {
+    if (!self->rom_data)
+    {
         printf("fail to alloc\n");
         goto fail;
     }
 
-    if (!ifile_read(romloader, self->rom_data, self->rom_size)) {
+    if (!ifile_read(romloader, self->rom_data, self->rom_size))
+    {
         printf("fail to read size: %zu\n", self->rom_size);
         goto fail;
     }
 
-    // if (!GB_loadrom_compressed(self->gameboy, self->rom_data, self->rom_size)) {
+    // if (!GB_loadrom_compressed(self->gameboy, self->rom_data, self->rom_size))
+    // {
     //     printf("fail to gb load rom\n");
     //     goto fail;
     // }
 
-    if (!GB_loadrom(self->gameboy, self->rom_data, self->rom_size)) {
+    if (!GB_loadrom(self->gameboy, self->rom_data, self->rom_size))
+    {
         printf("fail to gb load rom\n");
         goto fail;
     }
@@ -646,7 +676,8 @@ static bool loadrom(mgb_t* self, const struct LoadRomConfig* config) {
     return true;
 
 fail:
-    if (romloader) {
+    if (romloader)
+    {
         ifile_close(romloader);
         romloader = NULL;
     }
@@ -657,14 +688,16 @@ fail:
     return false;
 }
 
-bool mgb_load_rom_filedialog(mgb_t* self) {
+bool mgb_load_rom_filedialog(mgb_t* self)
+{
     const char* filters = "gb,gbc,zip";
 
     const struct FileDialogResult result = filedialog_open_file(
         filters
     );
 
-    switch (result.type) {
+    switch (result.type)
+    {
         case FileDialogResultType_OK:
             return mgb_load_rom_file(self, result.path);
 
@@ -678,14 +711,16 @@ bool mgb_load_rom_filedialog(mgb_t* self) {
     return false;
 }
 
-bool mgb_savestate_filedialog(mgb_t* self) {
+bool mgb_savestate_filedialog(mgb_t* self)
+{
     const char* filters = "state";
 
     const struct FileDialogResult result = filedialog_save_file(
         filters
     );
 
-    switch (result.type) {
+    switch (result.type)
+    {
         case FileDialogResultType_OK:
             return mgb_savestate_file(self, result.path);
 
@@ -699,14 +734,16 @@ bool mgb_savestate_filedialog(mgb_t* self) {
     return false;
 }
 
-bool mgb_loadstate_filedialog(mgb_t* self) {
+bool mgb_loadstate_filedialog(mgb_t* self)
+{
     const char* filters = "state";
 
     const struct FileDialogResult result = filedialog_open_file(
         filters
     );
 
-    switch (result.type) {
+    switch (result.type)
+    {
         case FileDialogResultType_OK:
             return mgb_loadstate_file(self, result.path);
 
@@ -720,8 +757,10 @@ bool mgb_loadstate_filedialog(mgb_t* self) {
     return false;
 }
 
-bool mgb_load_rom_file(mgb_t* self, const char* path) {
-    const struct LoadRomConfig config = {
+bool mgb_load_rom_file(mgb_t* self, const char* path)
+{
+    const struct LoadRomConfig config =
+    {
         .path = path,
         .size = 0,
         .type = LoadRomType_FILE
@@ -733,7 +772,8 @@ bool mgb_load_rom_file(mgb_t* self, const char* path) {
 bool mgb_load_rom_data(mgb_t* self,
     const char* path, const uint8_t* data, size_t size
 ) {
-    const struct LoadRomConfig config = {
+    const struct LoadRomConfig config =
+    {
         .path = path,
         .data = data,
         .size = size,
@@ -743,8 +783,10 @@ bool mgb_load_rom_data(mgb_t* self,
     return loadrom(self, &config);
 }
 
-bool mgb_savestate(mgb_t* self) {
-    if (!self->rom_loaded) {
+bool mgb_savestate(mgb_t* self)
+{
+    if (!self->rom_loaded)
+    {
         return false;
     }
 
@@ -752,15 +794,18 @@ bool mgb_savestate(mgb_t* self) {
         self->rom_path.str
     );
 
-    if (!path.valid) {
+    if (!path.valid)
+    {
         return false;
     }
 
     return mgb_savestate_file(self, path.str);
 }
 
-bool mgb_loadstate(mgb_t* self) {
-    if (!self->rom_loaded) {
+bool mgb_loadstate(mgb_t* self)
+{
+    if (!self->rom_loaded)
+    {
         return false;
     }
 
@@ -768,31 +813,36 @@ bool mgb_loadstate(mgb_t* self) {
         self->rom_path.str
     );
 
-    if (!path.valid) {
+    if (!path.valid)
+    {
         return false;
     }
 
     return mgb_loadstate_file(self, path.str);
 }
 
-bool mgb_savestate_file(mgb_t* self, const char* path) {
+bool mgb_savestate_file(mgb_t* self, const char* path)
+{
     bool result = true;
     IFile_t* file = NULL;
     struct GB_State* state = NULL;
 
     file = izip_open(path, IFileMode_WRITE);
     
-    if (!file) {
+    if (!file)
+    {
         result = false; goto end;
     }
 
-    if (!izip_open_file(file, "state")) {
+    if (!izip_open_file(file, "state"))
+    {
         result = false; goto end;
     }
 
     state = (struct GB_State*)malloc(sizeof(struct GB_State));
     
-    if (!state) {
+    if (!state)
+    {
         result = false; goto end;
     }
 
@@ -800,12 +850,14 @@ bool mgb_savestate_file(mgb_t* self, const char* path) {
     ifile_write(file, state, sizeof(struct GB_State));
 
 end:
-    if (file) {
+    if (file)
+    {
         ifile_close(file);
         file = NULL;
     }
 
-    if (state) {
+    if (state)
+    {
         free(state);
         state = NULL;
     }
@@ -813,24 +865,28 @@ end:
     return result;
 }
 
-bool mgb_loadstate_file(mgb_t* self, const char* path) {
+bool mgb_loadstate_file(mgb_t* self, const char* path)
+{
     bool result = true;
     IFile_t* file = NULL;
     struct GB_State* state = NULL;
 
     file = izip_open(path, IFileMode_READ);
     
-    if (!file) {
+    if (!file)
+    {
         result = false; goto end;
     }
 
-    if (!izip_open_file(file, "state")) {
+    if (!izip_open_file(file, "state"))
+    {
         result = false; goto end;
     }
 
     state = (struct GB_State*)malloc(sizeof(struct GB_State));
     
-    if (!state) {
+    if (!state)
+    {
         result = false; goto end;
     }
     
@@ -838,12 +894,14 @@ bool mgb_loadstate_file(mgb_t* self, const char* path) {
     GB_loadstate(self->gameboy, state);
 
 end:
-    if (file) {
+    if (file)
+    {
         ifile_close(file);
         file = NULL;
     }
 
-    if (state) {
+    if (state)
+    {
         free(state);
         state = NULL;
     }
@@ -851,34 +909,42 @@ end:
     return result;
 }
 
-void mgb_loop(mgb_t* self) {
-    while (self->running == true) {
+void mgb_loop(mgb_t* self)
+{
+    while (self->running == true)
+    {
     	run_events(self);
     	run_state(self);
     	run_render(self);
     }
 }
 
-bool mgb_init(mgb_t* self) {
-    if (!self) {
+bool mgb_init(mgb_t* self)
+{
+    if (!self)
+    {
         return false;
     }
 
     memset(self, 0, sizeof(struct mgb));
 
-	if (!setup_core(self)) {
+	if (!setup_core(self))
+    {
         goto fail;
     }
 
-    if (!setup_video_interface(self)) {
+    if (!setup_video_interface(self))
+    {
         goto fail;
     }
 
-    if (!setup_audio_interface(self)) {
+    if (!setup_audio_interface(self))
+    {
         goto fail;
     }
 
-    if (!gui_init(self)) {
+    if (!gui_init(self))
+    {
         goto fail;
     }
 
@@ -891,26 +957,31 @@ fail:
     return false;
 }
 
-void mgb_exit(mgb_t* self) {
-    if (!self) {
+void mgb_exit(mgb_t* self)
+{
+    if (!self)
+    {
         return;
     }
 
     free_game(self);
 
-    if (self->gameboy) {
+    if (self->gameboy)
+    {
         free(self->gameboy);
         self->gameboy = NULL;
     }
 
     gui_exit(self);
 
-    if (self->video_interface) {
+    if (self->video_interface)
+    {
         video_interface_quit(self->video_interface);
         self->video_interface = NULL;
     }
 
-    if (self->audio_interface) {
+    if (self->audio_interface)
+    {
         // audio_interface_quit(self->audio_interface);
         self->audio_interface = NULL;
     }

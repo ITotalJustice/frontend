@@ -5,7 +5,8 @@
 #include <stdlib.h>
 
 
-typedef struct Ctx {
+typedef struct Ctx
+{
     struct Base base;
 
     SDL_GLContext gl_ctx;
@@ -15,18 +16,20 @@ typedef struct Ctx {
 #define VOID_TO_SELF(_private) ctx_t* self = (ctx_t*)_private;
 
 
-static void quit(
-    void* _private
-) {
+static void quit(void* _private)
+{
     VOID_TO_SELF(_private);
 
-    if (SDL_WasInit(SDL_INIT_VIDEO)) {
-        if (self->texture) {
+    if (SDL_WasInit(SDL_INIT_VIDEO))
+    {
+        if (self->texture)
+        {
             glDeleteTextures(1, &self->texture);
             self->texture = 0;
         }
 
-        if (self->gl_ctx) {
+        if (self->gl_ctx)
+        {
             SDL_GL_DeleteContext(self->gl_ctx);
             self->gl_ctx = NULL;
         }
@@ -37,9 +40,8 @@ static void quit(
     SDL_free(self);
 }
 
-static void render_begin(
-    void* _private
-) {
+static void render_begin(void* _private)
+{
     VOID_TO_SELF(_private);
     (void)self;
 
@@ -49,9 +51,8 @@ static void render_begin(
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-static void render_game(
-    void* _private
-) {
+static void render_game(void* _private)
+{
     VOID_TO_SELF(_private);
     // SOURCE: https://discourse.libsdl.org/t/why-cant-we-do-blit-on-an-opengl-surface/10975/4
 
@@ -83,9 +84,8 @@ static void render_game(
     #endif
 }
 
-static void render_end(
-    void* _private
-) {
+static void render_end(void* _private)
+{
     VOID_TO_SELF(_private);
 
     SDL_GL_SwapWindow(self->base.window);
@@ -112,35 +112,29 @@ static void update_game_texture(
     );
 }
 
-static void poll_events(
-    void* _private
-) {
+static void poll_events(void* _private)
+{
     VOID_TO_SELF(_private);
 
     base_sdl2_poll_events(&self->base);
 }
 
-static void toggle_fullscreen(
-    void* _private
-) {
+static void toggle_fullscreen(void* _private)
+{
     VOID_TO_SELF(_private);
 
     base_sdl2_toggle_fullscreen(&self->base);
 }
 
-static void set_window_name(
-    void* _private,
-    const char* name
-) {
+static void set_window_name(void* _private, const char* name)
+{
     VOID_TO_SELF(_private);
 
     base_sdl2_set_window_name(&self->base, name);
 }
 
-static void on_resize(
-    void* _private,
-    int w, int h
-) {
+static void on_resize(void* _private, int w, int h)
+{
     (void)_private;
     glViewport(0, 0, w, h);
 }
@@ -164,16 +158,17 @@ struct VideoInterface* video_interface_init_sdl2_opengl(
         goto fail;
     }
 
-    const struct VideoInterface internal_interface = {
-        ._private = self,
-        .quit = quit,
-        .render_begin = render_begin,
-        .render_game = render_game,
-        .render_end = render_end,
-        .update_game_texture = update_game_texture,
-        .poll_events = poll_events,
-        .toggle_fullscreen = toggle_fullscreen,
-        .set_window_name = set_window_name,
+    const struct VideoInterface internal_interface =
+    {
+        ._private               = self,
+        .quit                   = internal_quit,
+        .render_begin           = internal_render_begin,
+        .render_game            = internal_render_game,
+        .render_end             = internal_render_end,
+        .update_game_texture    = internal_update_game_texture,
+        .poll_events            = internal_poll_events,
+        .toggle_fullscreen      = internal_toggle_fullscreen,
+        .set_window_name        = internal_set_window_name,
     };
 
     // set the internal data!

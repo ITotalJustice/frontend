@@ -3,11 +3,36 @@
 #include <stdlib.h>
 #include <assert.h>
 
-// these are just wrappers for the struct's data.
-// this is so that it makes the caller code much cleaner
-// and won't break on changing the struct details, or making
-// the struct opaque (which i think i might do).
 
+#ifdef MGB_VIDEO_BACKEND_SDL1
+    #include "sdl1/sdl1.h"
+    #define VIDEO_INTERFACE_INIT video_interface_init_sdl1
+#elif MGB_VIDEO_BACKEND_SDL1_OPENGL
+    #include "sdl1/sdl1_opengl.h"
+    #define VIDEO_INTERFACE_INIT video_interface_init_sdl1_opengl
+#elif MGB_VIDEO_BACKEND_SDL2
+    #include "sdl2/sdl2.h"
+    #define VIDEO_INTERFACE_INIT video_interface_init_sdl2
+#elif MGB_VIDEO_BACKEND_SDL2_OPENGL
+    #include "sdl2/sdl2_opengl.h"
+    #define VIDEO_INTERFACE_INIT video_interface_init_sdl2_opengl
+#elif MGB_VIDEO_BACKEND_CACA
+    #include "caca/caca.h"
+    #define VIDEO_INTERFACE_INIT video_interface_init_caca
+#elif MGB_VIDEO_BACKEND_NCURSES
+    #include "ncurses/ncurses.h"
+    #define VIDEO_INTERFACE_INIT video_interface_init_ncurses
+#else
+    #error "NO VIDEO BACKEND SELECTED FOR MGB!"
+#endif
+
+
+struct VideoInterface* video_interface_init(
+    const struct VideoInterfaceInfo* info,
+    void* user, void (*on_event)(void*, const union VideoInterfaceEvent*)
+) {
+    return VIDEO_INTERFACE_INIT(info, user, on_event);
+}
 
 void video_interface_quit(
     struct VideoInterface* self
